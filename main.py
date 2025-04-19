@@ -2,14 +2,16 @@
 
 import asyncio
 from search_engine import fetch_all, filter_and_alert
-import os
-import timefrom multi_city_engine import generate_multi_city_routes, fetch_multi_city, validate_multi_city_deal
+from multi_city_engine import generate_multi_city_routes, fetch_multi_city, validate_multi_city_deal
 from expansion_engine import expand_search_if_good
+import os
+import time
 
 ORIGINS = os.getenv('ORIGINS').split(',')
 DESTINATIONS = os.getenv('DESTINATIONS').split(',')
 DATES = os.getenv('DEPARTURE_DATES').split(',')
 INTERVAL_MINUTES = int(os.getenv('SEARCH_INTERVAL_MINUTES', 5))
+PRICE_THRESHOLD_ECONOMY = int(os.getenv('PRICE_THRESHOLD_ECONOMY', 15000))
 
 async def run_search_cycle():
     for origin in ORIGINS:
@@ -34,15 +36,8 @@ async def run_search_cycle():
                         print(f"[Multi-City Deal Found!] Total Price: {total_price} THB")
                         filter_and_alert(multi_city_flights)
 
-
 if __name__ == "__main__":
     while True:
         asyncio.run(run_search_cycle())
         print(f"Sleeping for {INTERVAL_MINUTES} minutes...\n")
         time.sleep(INTERVAL_MINUTES * 60)
-
-
-
-
-
-
