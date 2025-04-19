@@ -1,0 +1,61 @@
+# scraper_skyscanner.py
+
+import requests
+import os
+from currency_converter import convert_currency
+from region_mapper import get_region
+
+def fetch_skyscanner(origin, destination, departure_date, return_date=None, cabin_class="economy", rates={}):
+    """Scrape Skyscanner flight price."""
+    # ปรับให้ search one-way หรือ roundtrip ตาม input
+    trip_type = "oneway" if return_date is None else "roundtrip"
+    url = f"https://www.skyscanner.net/g/autosuggest-flights/{origin}/{destination}/{departure_date}"
+    
+    params = {
+        "market": "TH",
+        "locale": "en-GB",
+        "currency": "THB",
+        "tripType": trip_type,
+        "adults": 1,
+        "cabinClass": cabin_class,
+    }
+    if return_date:
+        params["returnDate"] = return_date
+
+    try:
+        res = requests.get(url, params=params)
+        if res.status_code == 200:
+            data = res.json()
+
+            # ดึงเฉพาะราคาที่ถูกที่สุด
+            flights = []
+            for deal in data.get('deals', []):
+                price = deal.get('price', None)
+                airline = deal.get('carrier', None)
+                booking_link = deal.get('deeplink', None)
+
+                if price and booking_link:
+                    flights.append({
+                        "origin": origin,
+                        "destination": destination,
+                        "departure_date": departure_date,
+                        "return_date": return_date,
+                        "price": price,
+                        "price_thb": convert_currency(price, "THB", rates),
+                        "cabin_class": cabin_class,
+                        "airline": airline,
+                        "source": "skyscanner",
+                        "booking_url": booking_link,
+                        "booking_source": "Skyscanner",
+                        "origin_region": get_region(origin),
+                        "destination_region": get_region(destination),
+                    })
+
+            return flights
+        else:
+            print(f"[Skyscanner] Error {res.status_code}: {res.text}")
+            return []
+
+    except Exception as e:
+        print(f"[Skyscanner] Exception: {e}")
+        return []
