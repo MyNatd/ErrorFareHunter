@@ -3,7 +3,7 @@
 import asyncio
 from search_engine import fetch_all, filter_and_alert
 import os
-import time
+import timefrom multi_city_engine import generate_multi_city_routes, fetch_multi_city, validate_multi_city_deal
 
 ORIGINS = os.getenv('ORIGINS').split(',')
 DESTINATIONS = os.getenv('DESTINATIONS').split(',')
@@ -19,6 +19,15 @@ def run_search_cycle():
                 print(f"Searching {origin} → {destination} {departure_date}")
                 flights = asyncio.run(fetch_all(origin, destination, departure_date))
                 filter_and_alert(flights)
+
+                # ถ้าเจอ deal ดี → ลอง Multi-City ขยาย
+                multi_routes = generate_multi_city_routes(origin, destination)
+                for route in multi_routes:
+                    multi_city_flights = asyncio.run(fetch_multi_city(route, departure_date))
+                    is_good, total_price = validate_multi_city_deal(multi_city_flights, "economy", PRICE_THRESHOLD_ECONOMY)
+                    if is_good:
+                        print(f"[Multi-City Deal Found!] Total Price: {total_price} THB")
+                        filter_and_alert(multi_city_flights)
 
 if __name__ == "__main__":
     while True:
