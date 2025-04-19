@@ -1,0 +1,7 @@
+requests
+playwright
+python-dotenv
+supabase
+aiohttp
+beautifulsoup4
+asyncio
