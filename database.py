@@ -7,6 +7,19 @@ SUPABASE_URL = os.getenv('SUPABASE_URL')
 SUPABASE_KEY = os.getenv('SUPABASE_ANON_KEY')
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
+def deal_exists(origin, destination, departure_date, price_thb, airline):
+    """Check if the deal already exists in the database."""
+    response = supabase.table('flight_prices')\
+        .select("id")\
+        .eq('origin', origin)\
+        .eq('destination', destination)\
+        .eq('departure_date', departure_date)\
+        .eq('min_price', price_thb)\
+        .eq('airline', airline)\
+        .execute()
+    return len(response.data) > 0
+
+
 def insert_flight_price(flight_data):
     """Insert a new flight into flight_prices table."""
     response = supabase.table('flight_prices').insert(flight_data).execute()
