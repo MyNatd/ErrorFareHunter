@@ -9,6 +9,7 @@ from database import insert_flight_price, insert_flight_sources, deal_exists
 from alert_manager import send_telegram_alert, send_line_alert
 from currency_converter import get_exchange_rates
 import os
+from currency_cache import get_exchange_rates_cached
 
 # Load .env config
 PRICE_THRESHOLD_ECONOMY = int(os.getenv('PRICE_THRESHOLD_ECONOMY', 15000))
@@ -80,7 +81,7 @@ Source: {flight['booking_source']}
 
 # Parallel Search
 async def fetch_all(origin, destination, departure_date, return_date=None):
-    rates = get_exchange_rates()
+    rates = get_exchange_rates_cached()
 
     tasks = [
         asyncio.to_thread(fetch_skyscanner, origin, destination, departure_date, return_date, "economy", rates),
