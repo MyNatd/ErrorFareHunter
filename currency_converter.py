@@ -1,29 +1,25 @@
-# currency_converter.py
+# currency_cache.py
 
-import requests
-import os
+import time
+from currency_converter import get_exchange_rates
 
-EXCHANGE_RATE_API = os.getenv('EXCHANGE_RATE_API')
+CACHED_RATES = None
+LAST_FETCH = 0
+CACHE_DURATION_SECONDS = 6 * 3600  # 6 ชั่วโมง
 
-def get_exchange_rates(base="THB"):
-    """Fetch latest exchange rates."""
-    url = f"{EXCHANGE_RATE_API}{base}"
-    try:
-        response = requests.get(url)
-        data = response.json()
-        if 'rates' in data:
-            return data['rates']
+def get_exchange_rates_cached(base="THB"):
+    """Get cached exchange rates, update if older than 6 hours."""
+    global CACHED_RATES, LAST_FETCH
+    current_time = time.time()
+
+    # เงื่อนไข: ถ้าเก่าเกิน CACHE_DURATION หรือยังไม่มีข้อมูล
+    if current_time - LAST_FETCH > CACHE_DURATION_SECONDS or not CACHED_RATES:
+        print("[Currency] Refreshing Exchange Rates...")
+        latest_rates = get_exchange_rates(base)
+        if latest_rates:
+            CACHED_RATES = latest_rates
+            LAST_FETCH = current_time
         else:
-            raise Exception("Invalid currency data format.")
-    except Exception as e:
-        print(f"Currency Fetch Error: {e}")
-        return {}
+            print("[Currency] Warning: Failed to fetch exchange rates, using old cache if available.")
 
-def convert_currency(amount, from_currency, rates):
-    """Convert amount from from_currency to base THB using rates dict."""
-    if from_currency == "THB":
-        return amount
-    if from_currency not in rates:
-        print(f"Warning: {from_currency} not found in rates.")
-        return None
-    return amount / rates[from_currency]
+    return CACHED_RATES or {}
