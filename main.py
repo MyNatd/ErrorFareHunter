@@ -6,6 +6,7 @@ from multi_city_engine import generate_multi_city_routes, fetch_multi_city, vali
 from expansion_engine import expand_search_if_good
 import os
 import time
+from multi_city_engine import generate_dynamic_routes, fetch_multi_city, validate_multi_city_deal
 
 ORIGINS = os.getenv('ORIGINS').split(',')
 DESTINATIONS = os.getenv('DESTINATIONS').split(',')
@@ -26,6 +27,15 @@ async def run_search_cycle():
 
                 # ถ้าเจอ deal ดี → ลองขยายสนามบินใกล้เคียง
                 await expand_search_if_good(origin, destination, departure_date)
+
+                # ใน run_search_cycle() ต่อจาก expand_search_if_good()
+                dynamic_routes = generate_dynamic_routes()
+                    for route in dynamic_routes:
+                        multi_city_flights = await fetch_multi_city(route, departure_date)
+                        is_good, total_price = validate_multi_city_deal(multi_city_flights, "economy", PRICE_THRESHOLD_ECONOMY)
+                    if is_good:
+                        print(f"[Dynamic Multi-City Deal Found!] Total Price: {total_price} THB")
+                        filter_and_alert(multi_city_flights)
 
                 # ลอง Multi-City เส้นทางเทพ ๆ
                 multi_routes = generate_multi_city_routes(origin, destination)
