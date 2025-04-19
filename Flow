@@ -1,0 +1,20 @@
+1. For each Origin Airport (SEA Airports)
+    ↳ Search all Destination Global
+    ↳ For each search:
+        - One-way
+        - Roundtrip
+        - Multi-city (เช่น BKK → HKG → JFK → HKG → SIN → BKK)
+    ↳ For each fare:
+        - Skyscanner Price
+        - Google Flights Price
+        - Kayak / Kiwi.com Price
+        - Trip.com Price (ถ้ามีเวลา)
+2. Normalize price to THB
+3. Classify cabin class
+4. Compare against Thresholds
+5. If Deal:
+    - Save to Supabase (Flight + Sources)
+    - Alert via Telegram + Line
+6. If Super Deal:
+    - Expand search around Neighbor Airports
+7. Repeat Every X Minutes (configurable)
